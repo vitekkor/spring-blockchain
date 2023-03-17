@@ -1,0 +1,13 @@
+server:
+  port: ${port:8080}
+
+spring:
+  application:
+    name: spring-blockchain
+
+logging:
+  file:
+    name: ${log.dir:/tmp}/spring-blockchain.main.log
+
+udp:
+  port: ${port:8080}
