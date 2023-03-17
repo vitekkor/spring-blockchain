@@ -10,6 +10,7 @@ plugins {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-starter-integration")
     implementation("org.springframework.integration:spring-integration-ip:6.0.3")
 
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
