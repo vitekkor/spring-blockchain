@@ -4,8 +4,8 @@ plugins {
     kotlin("jvm")
     id("org.springframework.boot") version "2.7.6"
     id("io.spring.dependency-management") version "1.1.0"
-    kotlin("plugin.spring") version "1.8.0"
-    kotlin("plugin.serialization") version "1.8.0"
+    kotlin("plugin.spring") version "1.8.20"
+    kotlin("plugin.serialization") version "1.8.20"
 }
 
 dependencies {
@@ -21,8 +21,11 @@ dependencies {
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
+}
+springBoot {
+    mainClass.set("com.vitekkor.blockchain.BlockchainApplicationKt")
 }
 
 
