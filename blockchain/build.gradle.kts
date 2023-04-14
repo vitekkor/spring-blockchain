@@ -14,6 +14,7 @@ dependencies {
 
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0-Beta")
     runtimeOnly("org.jetbrains.kotlin:kotlin-reflect:1.8.0")
     testImplementation(kotlin("test"))
 }

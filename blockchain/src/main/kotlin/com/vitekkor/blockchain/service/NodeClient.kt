@@ -12,7 +12,11 @@ class NodeClient(private val restTemplate: RestTemplate, private val node: Node)
 
     private val log = logger {}
     fun getLastBlock(): Block {
-        return restTemplate.getForObject("/lastBlock")
+        return restTemplate.getForObject<HttpOutgoingMessage.LastBlockMessage>("/lastBlock").block
+    }
+
+    fun getBlockChain(): List<Block> {
+        return restTemplate.getForObject<HttpOutgoingMessage.BlockChainMessage>("/blockChain").blocks
     }
 
     fun sendNewBlock(block: Block): Boolean {
