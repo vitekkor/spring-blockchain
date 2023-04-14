@@ -2,7 +2,9 @@ package com.vitekkor.blockchain.service
 
 import com.vitekkor.blockchain.configuration.properties.GenerationStrategy
 import com.vitekkor.blockchain.configuration.properties.GenerationStrategyProperties
+import com.vitekkor.blockchain.exception.NoBlocksInNodeException
 import com.vitekkor.blockchain.model.Block
+import com.vitekkor.blockchain.model.HttpOutgoingMessage
 import com.vitekkor.blockchain.util.fibonacci
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -10,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mu.KotlinLogging.logger
 import org.springframework.stereotype.Service
+import java.util.Collections
 import javax.annotation.PreDestroy
 import kotlin.random.Random
 import kotlin.streams.asSequence
@@ -29,8 +32,8 @@ class BlockGeneratorService(
         }
     }
 
-    private var lastIndex = -1L
-    private val blocks = ArrayList<Block>()
+    private var lastIndex = 0L
+    private val blocks = Collections.synchronizedList(ArrayList<Block>())
 
     private var lastNonce = 1L
 
@@ -49,21 +52,31 @@ class BlockGeneratorService(
             )
             try {
                 newBlock.validate()
+                if (newBlock.previousHash != getPreviousHash()) {
+                    continue
+                }
                 val accepted = sendNewBlock(newBlock)
                 if (!accepted) {
-                    TODO()
+                    val lastBlock = nodeClients.random().getLastBlock()
+                    if (blocks.last().hash == lastBlock.previousHash) {
+                        blocks.add(lastBlock)
+                    } else {
+                        val blockChain = nodeClients.random().getBlockChain()
+                        blocks.clear()
+                        blocks.addAll(blockChain)
+                    }
                     continue
                 }
                 blocks.add(newBlock)
                 lastIndex++
                 return
             } catch (e: IllegalArgumentException) {
-                log.info { "Illegal block $newBlock. Regenerate..." }
+                log.info { "Invalid block $newBlock. Regenerate..." }
             }
         } while (true)
     }
 
-    fun getPreviousHash(): String {
+    private fun getPreviousHash(): String {
         return blocks.lastOrNull()?.hash ?: ""
     }
 
@@ -96,6 +109,27 @@ class BlockGeneratorService(
 
     fun stop() {
         job.cancel()
+    }
+
+    fun getLastBlock(): Block = blocks.lastOrNull() ?: throw NoBlocksInNodeException()
+
+    fun getBlockChain(): List<Block> = blocks
+
+    fun validateNewBlockAndSave(newBlock: Block): HttpOutgoingMessage {
+        return try {
+            newBlock.validate()
+            if (newBlock.previousHash == getLastBlock().hash) {
+                blocks.add(newBlock)
+                log.info { "New block $newBlock accepted." }
+                HttpOutgoingMessage.BlockAcceptedMessage(newBlock)
+            } else {
+                log.info { "New block $newBlock doesn't accepted - invalid previous hash" }
+                HttpOutgoingMessage.BlockValidationError("Invalid previous hash", newBlock)
+            }
+        } catch (e: IllegalArgumentException) {
+            log.info { "Invalid new block $newBlock" }
+            HttpOutgoingMessage.BlockValidationError("Invalid block", newBlock)
+        }
     }
 
     @PreDestroy

@@ -6,4 +6,6 @@ sealed class HttpOutgoingMessage {
     data class BlockAcceptedMessage(val block: Block): HttpOutgoingMessage()
 
     data class LastBlockMessage(val block: Block) : HttpIncomingMessage()
+
+    data class BlockChainMessage(val blocks: List<Block>) : HttpIncomingMessage()
 }

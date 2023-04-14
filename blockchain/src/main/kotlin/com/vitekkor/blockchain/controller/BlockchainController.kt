@@ -31,7 +31,15 @@ class BlockchainController(private val blockGeneratorService: BlockGeneratorServ
     @GetMapping("/lastBlock")
     fun getLastBlock(httpServletRequest: HttpServletRequest): HttpOutgoingMessage.LastBlockMessage {
         log.info("Incoming get last block request from ${httpServletRequest.remoteAddr}")
-        TODO("Return last block")
+        val lastBlock = blockGeneratorService.getLastBlock()
+        return HttpOutgoingMessage.LastBlockMessage(lastBlock)
+    }
+
+    @GetMapping("/blockChain")
+    fun getBlockChain(httpServletRequest: HttpServletRequest): HttpOutgoingMessage.BlockChainMessage {
+        log.info("Incoming get block chain request from ${httpServletRequest.remoteAddr}")
+        val blocks = blockGeneratorService.getBlockChain()
+        return HttpOutgoingMessage.BlockChainMessage(blocks)
     }
 
     @PostMapping("/newBlock")
@@ -40,7 +48,7 @@ class BlockchainController(private val blockGeneratorService: BlockGeneratorServ
         @RequestBody newBlock: HttpIncomingMessage.NewBlockMessage
     ): HttpOutgoingMessage {
         log.info("Incoming post new block request from ${httpServletRequest.remoteAddr}")
-        TODO("Return validate block and save")
+        return blockGeneratorService.validateNewBlockAndSave(newBlock.block)
     }
 
     @GetMapping("/generateGenesys")
