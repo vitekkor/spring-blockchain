@@ -3,11 +3,13 @@ server:
 
 spring:
   application:
-    name: spring-blockchain
+    name: vitcoin
 
 logging:
   file:
     name: ${log.dir:/tmp}/spring-blockchain.main.log
 
-udp:
-  port: ${port:8080}
+blockchain:
+  nodes:
+    - address:
+      port:
