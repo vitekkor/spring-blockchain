@@ -10,6 +10,7 @@ logging:
     name: ${log.dir:/tmp}/spring-blockchain.main.log
 
 blockchain:
+  generationStrategyName:
   nodes:
     - address:
       port:

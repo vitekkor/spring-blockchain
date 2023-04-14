@@ -42,4 +42,11 @@ class BlockchainController(private val blockGeneratorService: BlockGeneratorServ
         log.info("Incoming post new block request from ${httpServletRequest.remoteAddr}")
         TODO("Return validate block and save")
     }
+
+    @GetMapping("/generateGenesys")
+    fun generateGenesis() {
+        log.info("Generating genesys...")
+        blockGeneratorService.generateGenesis()
+        log.info("Genesys generated successfully")
+    }
 }
