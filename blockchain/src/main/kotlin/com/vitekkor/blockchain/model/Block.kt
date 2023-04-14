@@ -2,7 +2,7 @@ package com.vitekkor.blockchain.model
 
 import com.vitekkor.blockchain.util.sha256
 
-data class Blockchain(
+data class Block(
     val index: Long,
     val previousHash: String,
     val hash: String,
