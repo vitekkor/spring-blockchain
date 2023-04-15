@@ -9,7 +9,9 @@ import com.vitekkor.blockchain.util.fibonacci
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging.logger
 import org.springframework.stereotype.Service
 import java.util.Collections
@@ -26,39 +28,45 @@ class BlockGeneratorService(
     private val log = logger {}
 
     private val scope = CoroutineScope(Dispatchers.Default)
-    private val job = scope.launch(start = CoroutineStart.LAZY) {
-        while (true) {
-            generateBlock()
+    private val newBlockGenerationJob
+        get() = scope.launch(start = CoroutineStart.LAZY) {
+            while (isActive) {
+                generateBlock()
+            }
         }
-    }
 
-    private var lastIndex = 0L
+    private var job = newBlockGenerationJob
+
+    private val lastIndex
+        get() = blocks.lastOrNull()?.index ?: 0L
     private val blocks = Collections.synchronizedList(ArrayList<Block>())
 
-    private var lastNonce = 1L
+    private var lastNonce = -1L
 
 
-    fun generateGenesis() {
+    fun generateGenesis() = runBlocking {
         generateBlock()
     }
 
-    private fun generateBlock() {
+    private suspend fun generateBlock() {
+        val data = generateData()
+        val previousHash = getPreviousHash()
         do {
             val newBlock = Block(
-                index = lastIndex,
-                previousHash = getPreviousHash(),
-                data = generateData(),
+                index = lastIndex + 1,
+                previousHash = previousHash,
+                data = data,
                 nonce = generateNonce()
             )
             try {
                 newBlock.validate()
-                if (newBlock.previousHash != getPreviousHash()) {
+                if (newBlock.previousHash != previousHash) {
                     continue
                 }
                 val accepted = sendNewBlock(newBlock)
                 if (!accepted) {
                     val lastBlock = nodeClients.random().getLastBlock()
-                    if (blocks.last().hash == lastBlock.previousHash) {
+                    if (blocks.lastOrNull()?.hash == lastBlock.previousHash) {
                         blocks.add(lastBlock)
                     } else {
                         val blockChain = nodeClients.random().getBlockChain()
@@ -68,12 +76,11 @@ class BlockGeneratorService(
                     continue
                 }
                 blocks.add(newBlock)
-                lastIndex++
                 return
             } catch (e: IllegalArgumentException) {
                 log.info { "Invalid block $newBlock. Regenerate..." }
             }
-        } while (true)
+        } while (job.isActive)
     }
 
     private fun getPreviousHash(): String {
@@ -104,6 +111,9 @@ class BlockGeneratorService(
     }
 
     fun start() {
+        if (job.isCancelled) {
+            job = newBlockGenerationJob
+        }
         job.start()
     }
 
@@ -118,6 +128,11 @@ class BlockGeneratorService(
     fun validateNewBlockAndSave(newBlock: Block): HttpOutgoingMessage {
         return try {
             newBlock.validate()
+            if (blocks.isEmpty() && newBlock.previousHash == "") {
+                log.info { "Accept genesys block $newBlock" }
+                blocks.add(newBlock)
+                return HttpOutgoingMessage.BlockAcceptedMessage(newBlock)
+            }
             if (newBlock.previousHash == getLastBlock().hash) {
                 blocks.add(newBlock)
                 log.info { "New block $newBlock accepted." }
