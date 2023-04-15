@@ -1,7 +1,9 @@
 package com.vitekkor.blockchain.model
 
 import com.vitekkor.blockchain.util.sha256
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class Block(
     val index: Long,
     val previousHash: String,
@@ -21,5 +23,9 @@ data class Block(
         val hashString = "$index$previousHash$data$nonce"
         val sha256String = hashString.sha256()
         require(sha256String.takeLast(4).all { it == '0' })
+    }
+
+    companion object {
+        val EMPTY get() =  Block(-1L, "", "", -1)
     }
 }
