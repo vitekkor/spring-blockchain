@@ -6,6 +6,7 @@ import com.vitekkor.blockchain.exception.NoBlocksInNodeException
 import com.vitekkor.blockchain.model.Block
 import com.vitekkor.blockchain.model.HttpOutgoingMessage
 import com.vitekkor.blockchain.util.fibonacci
+import com.vitekkor.blockchain.util.generateData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +18,6 @@ import org.springframework.stereotype.Service
 import java.util.Collections
 import javax.annotation.PreDestroy
 import kotlin.random.Random
-import kotlin.streams.asSequence
 
 
 @Service
@@ -75,25 +75,17 @@ class BlockGeneratorService(
                     }
                     continue
                 }
+                log.info { "Successfully generate block $newBlock!" }
                 blocks.add(newBlock)
                 return
             } catch (e: IllegalArgumentException) {
-                log.info { "Invalid block $newBlock. Regenerate..." }
+                log.trace { "Invalid block $newBlock. Regenerate..." }
             }
         } while (job.isActive)
     }
 
     private fun getPreviousHash(): String {
         return blocks.lastOrNull()?.hash ?: ""
-    }
-
-    private fun generateData(): String {
-        val source = ('A'..'Z') + ('a'..'z') + ('0'..'9')
-        val length = Random.nextLong(0, 256)
-        return java.util.Random().ints(length, 0, source.size)
-            .asSequence()
-            .map(source::get)
-            .joinToString("")
     }
 
     private fun generateNonce(): Long {
@@ -128,7 +120,7 @@ class BlockGeneratorService(
     fun validateNewBlockAndSave(newBlock: Block): HttpOutgoingMessage {
         return try {
             newBlock.validate()
-            if (blocks.isEmpty() && newBlock.previousHash == "") {
+            if (blocks.isEmpty() && newBlock.previousHash == "" && newBlock.index == 1L) {
                 log.info { "Accept genesys block $newBlock" }
                 blocks.add(newBlock)
                 return HttpOutgoingMessage.BlockAcceptedMessage(newBlock)
@@ -144,6 +136,9 @@ class BlockGeneratorService(
         } catch (e: IllegalArgumentException) {
             log.info { "Invalid new block $newBlock" }
             HttpOutgoingMessage.BlockValidationError("Invalid block", newBlock)
+        } catch (e: NoBlocksInNodeException) {
+            log.info { "Invalid new block $newBlock - is not a genesis. Retrive blockchain from another node..." }
+            HttpOutgoingMessage.BlockValidationError("Invalid block - is not a genesis", newBlock)
         }
     }
 
