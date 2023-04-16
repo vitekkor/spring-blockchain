@@ -1,0 +1,6 @@
+FROM alpine:3.17.3
+WORKDIR /vitekkor/vitcoin
+ENTRYPOINT ./startScript.sh $NODES
+RUN apk --no-cache add curl
+COPY ./startScript.sh .
+RUN chmod +x startScript.sh
