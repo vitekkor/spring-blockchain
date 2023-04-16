@@ -1,0 +1,7 @@
+blockchain:
+  generationStrategyName: INCREMENT
+  nodes:
+    - address: http://node1
+      port: 8080
+    - address: http://node3
+      port: 8080

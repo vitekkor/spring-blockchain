@@ -1,0 +1,7 @@
+blockchain:
+  generationStrategyName: FIBONACCI
+  nodes:
+    - address: http://node1
+      port: 8080
+    - address: http://node2
+      port: 8080

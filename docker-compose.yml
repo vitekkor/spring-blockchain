@@ -1,0 +1,32 @@
+version: '3'
+services:
+  node1:
+    image: vitekkor/vitcoin:1.0.0
+    volumes:
+      - ./application-node_1.yml:/etc/vitekkor/vitcoin/application.yml
+    restart: always
+    ports:
+      - "8080:8080"
+  node2:
+    image: vitekkor/vitcoin:1.0.0
+    volumes:
+      - ./application-node_2.yml:/etc/vitekkor/vitcoin/application.yml
+    restart: always
+    ports:
+      - "8081:8080"
+  node3:
+    image: vitekkor/vitcoin:1.0.0
+    volumes:
+      - ./application-node_3.yml:/etc/vitekkor/vitcoin/application.yml
+    restart: always
+    ports:
+      - "8082:8080"
+  start-script:
+    image: vitekkor/vitcoin-start-script:1.0.0
+    restart: no
+    environment:
+      NODES: "node1:8080 node2:8080 node3:8080"
+    depends_on:
+      - node1
+      - node2
+      - node3
