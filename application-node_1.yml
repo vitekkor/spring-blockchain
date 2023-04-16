@@ -1,7 +1,5 @@
 blockchain:
   generationStrategyName: RANDOM
   nodes:
-    - address: http://node2
-      port: 8080
-    - address: http://node3
-      port: 8080
+    - uri: http://node2:8080
+    - uri: http://node3:8080
