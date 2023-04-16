@@ -42,7 +42,7 @@ class NodeClient(private val restTemplate: RestTemplate, private val node: Node)
                 }
 
                 is HttpOutgoingMessage.BlockAcceptedMessage -> {
-                    log.warn("Block ${result.block} accepted by node ${node.address}:${node.port}")
+                    log.info("Block ${result.block} accepted by node ${node.address}:${node.port}")
                     true
                 }
             }

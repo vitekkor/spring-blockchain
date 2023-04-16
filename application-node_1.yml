@@ -1,0 +1,7 @@
+blockchain:
+  generationStrategyName: RANDOM
+  nodes:
+    - address: http://node2
+      port: 8080
+    - address: http://node3
+      port: 8080
