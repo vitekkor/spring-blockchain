@@ -1,7 +1,5 @@
 blockchain:
   generationStrategyName: INCREMENT
   nodes:
-    - address: http://node1
-      port: 8080
-    - address: http://node3
-      port: 8080
+    - uri: http://node1:8080
+    - uri: http://node3:8080

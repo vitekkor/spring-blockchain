@@ -11,7 +11,7 @@ class BlockchainConfiguration {
     @Bean
     fun nodeClients(nodesProperties: NodesProperties, restTemplateBuilder: RestTemplateBuilder): List<NodeClient> {
         return nodesProperties.nodes.map {
-            val restTemplate = restTemplateBuilder.rootUri("${it.address}:${it.port}").build()
+            val restTemplate = restTemplateBuilder.rootUri(it.uri).build()
             NodeClient(restTemplate, it)
         }
     }

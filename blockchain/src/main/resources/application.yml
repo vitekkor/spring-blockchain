@@ -11,6 +11,4 @@ logging:
 
 blockchain:
   generationStrategyName:
-  nodes:
-    - address:
-      port:
+  nodes: []

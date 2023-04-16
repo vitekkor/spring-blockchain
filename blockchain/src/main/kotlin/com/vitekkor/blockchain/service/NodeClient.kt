@@ -37,12 +37,12 @@ class NodeClient(private val restTemplate: RestTemplate, private val node: Node)
                 restTemplate.postForObject<HttpOutgoingMessage>("/newBlock", HttpIncomingMessage.NewBlockMessage(block))
             return when (result) {
                 is HttpOutgoingMessage.BlockValidationError -> {
-                    log.warn("Block ${result.block} not accepted by node ${node.address}:${node.port}: ${result.message}")
+                    log.warn("Block ${result.block} not accepted by node ${node.uri}: ${result.message}")
                     false
                 }
 
                 is HttpOutgoingMessage.BlockAcceptedMessage -> {
-                    log.info("Block ${result.block} accepted by node ${node.address}:${node.port}")
+                    log.info("Block ${result.block} accepted by node ${node.uri}")
                     true
                 }
             }

@@ -7,4 +7,4 @@ import org.springframework.boot.context.properties.ConstructorBinding
 @ConfigurationProperties("blockchain")
 data class NodesProperties(val nodes: List<Node>)
 
-data class Node(val address: String, val port: Int)
+data class Node(val uri: String)
