@@ -100,7 +100,7 @@ class BlockGeneratorService(
         return when (generationStrategyProperties.generationStrategyName) {
             GenerationStrategy.INCREMENT -> lastNonce++
             GenerationStrategy.RANDOM -> Random.nextLong()
-            GenerationStrategy.FIBONACCI -> fibonacci(lastNonce++)
+            GenerationStrategy.FIBONACCI -> fibonacci(++lastNonce)
         }
     }
 
