@@ -17,6 +17,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0-Beta")
     runtimeOnly("org.jetbrains.kotlin:kotlin-reflect:1.8.0")
     testImplementation(kotlin("test"))
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("com.ninja-squad:springmockk:4.0.2")
+    testImplementation("org.awaitility:awaitility-kotlin:4.2.0")
 }
 
 tasks.withType<KotlinCompile> {
