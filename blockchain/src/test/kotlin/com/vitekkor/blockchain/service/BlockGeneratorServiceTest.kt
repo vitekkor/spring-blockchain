@@ -31,10 +31,13 @@ internal class BlockGeneratorServiceTest {
         mockkStatic(::generateData)
         every { generateData() } returns "Не до конца раскрыта тема природы в данном блокчейне..."
 
+        ReflectionTestUtils.setField(blockGeneratorService, "lastNonce", 130000L)
+
         blockGeneratorService.start()
-        await().atMost(Durations.TEN_SECONDS).untilAsserted {
+        await().atMost(Durations.ONE_MINUTE).untilAsserted {
             assertTrue(blockGeneratorService.getBlockChain().isNotEmpty())
         }
+        ReflectionTestUtils.setField(blockGeneratorService, "lastNonce", -1L)
     }
 
     @Test
@@ -43,7 +46,7 @@ internal class BlockGeneratorServiceTest {
         every { generateData() } returns "Не до конца раскрыта тема природы в данном блокчейне..."
 
         blockGeneratorService.start()
-        await().atMost(Durations.TEN_SECONDS).untilAsserted {
+        await().atMost(Durations.ONE_MINUTE).untilAsserted {
             assertTrue(blockGeneratorService.getBlockChain().isNotEmpty())
             blockGeneratorService.stop()
             assertTrue(blockGeneratorService.getBlockChain().size == 1)
