@@ -17,8 +17,8 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-java@v3
         with:
-          distribution: corretto
-          java-version: 11
+          distribution: zulu
+          java-version: 17
 
       - name: Setup Gradle and test
         uses: gradle/gradle-build-action@v2
