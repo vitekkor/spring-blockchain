@@ -41,6 +41,7 @@ class BlockGeneratorService(
         get() = blocks.lastOrNull()?.index ?: 0L
     private val blocks = Collections.synchronizedList(ArrayList<Block>())
 
+    @Volatile
     private var lastNonce = -1L
 
 
@@ -59,10 +60,10 @@ class BlockGeneratorService(
                 nonce = generateNonce()
             )
             try {
-                newBlock.validate()
-                if (newBlock.previousHash != previousHash) {
-                    continue
+                if (newBlock.previousHash != getPreviousHash()) {
+                    return
                 }
+                newBlock.validate()
                 val accepted = sendNewBlock(newBlock)
                 if (!accepted) {
                     val lastBlock = nodeClients.random().getLastBlock()
