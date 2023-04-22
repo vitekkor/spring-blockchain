@@ -1,6 +1,10 @@
 #  Vitcoin
 
-Bitcoin killer
+[![CI](https://github.com/vitekkor/vitcoin/actions/workflows/main.yaml/badge.svg)](https://github.com/vitekkor/vitcoin/actions/workflows/main.yaml)
+![Coverage](.github/badges/jacoco.svg)
+![Branches](.github/badges/branches.svg)
+
+**Bitcoin killer**
 
 Simple blockchain implementation on the spring-framework
 
@@ -21,6 +25,7 @@ data class Block(
 _hash_ = _sha256_(concatenation of _index_, _previousHash_, _data_ and _nonce_ fields)
 
 A block is valid provided the hash ends with 4 zeros.
+
 2. HttpMessages models
 
 Incoming message about generating newBlock by another node
