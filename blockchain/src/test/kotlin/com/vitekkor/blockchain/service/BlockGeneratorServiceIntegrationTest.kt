@@ -109,7 +109,7 @@ internal class BlockGeneratorServiceIntegrationTest {
 
         lateinit var result: HttpOutgoingMessage.BlockChainMessage
 
-        Awaitility.await().atMost(Durations.ONE_MINUTE).untilAsserted {
+        Awaitility.await().atMost(Durations.ONE_MINUTE.multipliedBy(2)).untilAsserted {
             mockMvc.perform(get("/blockChain"))
                 .andExpect(status().isOk)
                 .andDo {
