@@ -6,6 +6,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.0"
     kotlin("plugin.spring") version "1.8.20"
     kotlin("plugin.serialization") version "1.8.20"
+    jacoco
 }
 
 dependencies {
@@ -35,4 +36,12 @@ springBoot {
 
 tasks.test {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        csv.required.set(true)
+    }
 }
