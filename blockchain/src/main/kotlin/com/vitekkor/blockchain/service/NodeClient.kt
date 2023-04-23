@@ -9,15 +9,16 @@ import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.getForObject
 import org.springframework.web.client.postForObject
+import java.lang.IllegalStateException
 
 class NodeClient(private val restTemplate: RestTemplate, private val node: Node) {
 
     private val log = logger {}
     fun getLastBlock(): Block {
         return try {
-            restTemplate.getForObject<HttpOutgoingMessage.LastBlockMessage>("/lastBlock").block
+            restTemplate.getForObject<HttpOutgoingMessage.LastBlockMessage>("/lastBlock").lastBlock
         } catch (e: RestClientException) {
-            log.error("Unexpected exception occurred while trying to get blockChain from the node $node", e)
+            log.error("Unexpected exception occurred while trying to get last block from the node $node", e)
             Block.EMPTY
         }
     }
@@ -45,6 +46,7 @@ class NodeClient(private val restTemplate: RestTemplate, private val node: Node)
                     log.info("Block ${result.block} accepted by node ${node.uri}")
                     true
                 }
+                else -> throw IllegalStateException()
             }
         } catch (e: RestClientException) {
             log.error("Unexpected exception occurred while trying to send new block to the node $node", e)
