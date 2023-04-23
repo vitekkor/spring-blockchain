@@ -20,6 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.client.getForEntity
 import org.springframework.boot.test.web.client.postForEntity
+import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.util.ReflectionTestUtils
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -29,6 +30,7 @@ import kotlin.test.assertTrue
     webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
     properties = ["blockchain.nodes=http://localhost:8080/stub"]
 )
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 internal class NodeClientTest {
 
     @Autowired
@@ -91,6 +93,8 @@ internal class NodeClientTest {
                 assertTrue(it.statusCode.is2xxSuccessful)
                 assertNotNull(it.body)
                 assertTrue(it.body?.blocks?.size == 11)
+                assertTrue(testRestTemplate.getForEntity<String>("/stop").statusCode.is2xxSuccessful)
+                assertTrue(testRestTemplate.getForEntity<String>("/start").statusCode.is2xxSuccessful)
             }
         }
     }
@@ -176,6 +180,7 @@ internal class NodeClientTest {
     @Test
     fun getBlockChainExceptionTest() {
         mockkStatic(::generateData)
+        every { generateData() } returnsMany blocks.map { it.data }
         var i = 0
 
         nodeStubDelegate.blocks = blocks.dropLast(1)
@@ -191,7 +196,7 @@ internal class NodeClientTest {
             if (i++ > 0) {
                 nodeStubDelegate.getBlockChainPreHook = {}
             } else {
-                ReflectionTestUtils.setField(blockGeneratorService, "lastNonce", 114200)
+                ReflectionTestUtils.setField(blockGeneratorService, "lastNonce", 25300)
                 Thread.sleep(1000)
             }
             it.last()
@@ -202,7 +207,7 @@ internal class NodeClientTest {
 
         assertTrue(testRestTemplate.getForEntity<String>("/start").statusCode.is2xxSuccessful)
 
-        ReflectionTestUtils.setField(blockGeneratorService, "lastNonce", 113200)
+        ReflectionTestUtils.setField(blockGeneratorService, "lastNonce", 25300)
 
         Awaitility.await().atMost(Durations.ONE_MINUTE.multipliedBy(2)).untilAsserted {
             testRestTemplate.getForEntity<HttpOutgoingMessage.BlockChainMessage>("/blockChain").let {
