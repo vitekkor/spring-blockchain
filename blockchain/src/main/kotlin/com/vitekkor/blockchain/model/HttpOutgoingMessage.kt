@@ -11,8 +11,8 @@ sealed class HttpOutgoingMessage {
     data class BlockAcceptedMessage(val block: Block): HttpOutgoingMessage()
 
     @Serializable
-    data class LastBlockMessage(val block: Block) : HttpIncomingMessage()
+    data class LastBlockMessage(val lastBlock: Block) : HttpOutgoingMessage()
 
     @Serializable
-    data class BlockChainMessage(val blocks: List<Block>) : HttpIncomingMessage()
+    data class BlockChainMessage(val blocks: List<Block>) : HttpOutgoingMessage()
 }

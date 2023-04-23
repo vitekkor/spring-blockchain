@@ -217,4 +217,34 @@ internal class BlockGeneratorServiceIntegrationTest {
             assertEquals(expectedResponse, actualResponse)
         }
     }
+
+    @Test
+    fun nodeHasNoBlocksTest() {
+        mockMvc.perform(get("/lastBlock"))
+            .andExpect(status().isBadRequest).andDo {
+                val actualResponse = it.response.contentAsString
+                val expectedResponse = "Node has no blocks!"
+                assertEquals(expectedResponse, actualResponse)
+            }
+        val genesisBlock = Block(
+            index = 1,
+            previousHash = "",
+            hash = "2f8660a39f4ef07a7cd784b5f5140197d95addd17183d25837580df586170000",
+            data = "p9PmGmjLj5N0qxaP4MW6yHBsGQxODwhcQdaDFV4CIkOSi3UU0fn6YK4R",
+            nonce = 8344120720967856628L
+        ).let { HttpIncomingMessage.NewBlockMessage(it) }
+        mockMvc.perform(
+            post("/newBlock").contentType(MediaType.APPLICATION_JSON).content(Json.encodeToString(genesisBlock))
+        ).andExpect(status().isOk).andDo {
+            val actualResponse = Json.decodeFromString<HttpOutgoingMessage>(it.response.contentAsString)
+            val expectedResponse = HttpOutgoingMessage.BlockAcceptedMessage(genesisBlock.block)
+            assertEquals(expectedResponse, actualResponse)
+        }
+        mockMvc.perform(get("/lastBlock"))
+            .andExpect(status().isOk).andDo {
+                val actualResponse = Json.decodeFromString<HttpOutgoingMessage.LastBlockMessage>(it.response.contentAsString)
+                val expectedResponse = HttpOutgoingMessage.LastBlockMessage(genesisBlock.block)
+                assertEquals(expectedResponse, actualResponse)
+            }
+    }
 }
