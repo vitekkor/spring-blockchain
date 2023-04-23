@@ -82,7 +82,7 @@ class BlockGeneratorService(
             } catch (e: IllegalArgumentException) {
                 log.trace { "Invalid block $newBlock. Regenerate..." }
             }
-        } while (job.isActive)
+        } while (true)
     }
 
     private fun getPreviousHash(): String {

@@ -1,6 +1,11 @@
 package com.vitekkor.blockchain.util
 
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkConstructor
+import io.mockk.mockkStatic
 import org.junit.jupiter.api.Test
+import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -42,5 +47,18 @@ internal class UtilsTests {
         val sha256 = testString.sha256()
         assertEquals(64, sha256.length)
         assertTrue(sha256.matches("^[0-9a-fA-F]+$".toRegex()))
+    }
+
+    @Test
+    fun generateDataTest() {
+        val random = mockk<Random>()
+        every { random.nextLong(0, 256) } returns 5
+
+        every { random.nextInt(0, any()) } returnsMany (0..4).toList()
+        assertEquals("ABCDE", generateData(random))
+
+        every { random.nextLong(0, 256) } returns 62
+        every { random.nextInt(0, any()) } returnsMany (0..62).toList()
+        assertEquals((('A'..'Z') + ('a'..'z') + ('0'..'9')).joinToString(""), generateData(random))
     }
 }

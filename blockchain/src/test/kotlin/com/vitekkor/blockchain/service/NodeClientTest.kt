@@ -218,4 +218,60 @@ internal class NodeClientTest {
         }
     }
 
+    @Test
+    fun sendNewNodeExceptionTest() {
+        mockkStatic(::generateData)
+        every { generateData() } returnsMany blocks.filter { it.index == 1L || it.index == 11L }.map { it.data }
+
+        nodeStubDelegate.blocks = blocks.dropLast(1)
+        nodeStubDelegate.blockValidationLambda = {
+            throw NoBlocksInNodeException()
+        }
+
+        nodeStubDelegate.getBlockChainPreHook = {
+            ReflectionTestUtils.setField(blockGeneratorService, "lastNonce", (blocks.last().nonce - 1000L))
+        }
+
+        nodeStubDelegate.lastBlockLambda = {
+            nodeStubDelegate.blockValidationLambda = { block ->
+                HttpOutgoingMessage.BlockAcceptedMessage(block)
+            }
+            it.last()
+        }
+
+        assertTrue(testRestTemplate.getForEntity<String>("/start").statusCode.is2xxSuccessful)
+
+        ReflectionTestUtils.setField(blockGeneratorService, "lastNonce", 25300)
+
+        Awaitility.await().atMost(Durations.ONE_MINUTE.multipliedBy(2)).untilAsserted {
+            testRestTemplate.getForEntity<HttpOutgoingMessage.BlockChainMessage>("/blockChain").let {
+                assertTrue(it.statusCode.is2xxSuccessful)
+                assertNotNull(it.body)
+                assertTrue(it.body?.blocks?.size == 11)
+            }
+        }
+    }
+
+    @Test
+    fun generateGenesisTest() {
+        mockkStatic(::generateData)
+        every { generateData() } returns "Не до конца раскрыта тема природы в данном блокчейне..."
+
+        nodeStubDelegate.blockValidationLambda = {
+            assertEquals(1L, it.index)
+            assertEquals("", it.previousHash)
+            HttpOutgoingMessage.BlockAcceptedMessage(it)
+        }
+
+        ReflectionTestUtils.setField(blockGeneratorService, "lastNonce", 130000L)
+
+        assertTrue(testRestTemplate.getForEntity<String>("/generateGenesys").statusCode.is2xxSuccessful)
+
+        testRestTemplate.getForEntity<HttpOutgoingMessage.BlockChainMessage>("/blockChain").let {
+            assertTrue(it.statusCode.is2xxSuccessful)
+            assertNotNull(it.body)
+            assertTrue(it.body?.blocks?.size == 1)
+        }
+    }
+
 }
