@@ -15,6 +15,7 @@ import kotlinx.serialization.json.decodeFromStream
 import org.awaitility.Awaitility
 import org.awaitility.Durations
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -57,6 +58,11 @@ internal class NodeClientTest {
         nodeStubDelegate.getBlockChainPreHook = {}
         nodeStubDelegate.lastBlockLambda = { it.last() }
         nodeStubDelegate.blockValidationLambda = { HttpOutgoingMessage.BlockAcceptedMessage(it) }
+    }
+
+    @AfterEach
+    fun stopNode() {
+        assertTrue(testRestTemplate.getForEntity<String>("/stop").statusCode.is2xxSuccessful)
     }
 
     @Test
@@ -199,7 +205,6 @@ internal class NodeClientTest {
                 nodeStubDelegate.getBlockChainPreHook = {}
             } else {
                 ReflectionTestUtils.setField(blockGeneratorService, "lastNonce", 25300)
-                Thread.sleep(1000)
             }
             it.last()
         }

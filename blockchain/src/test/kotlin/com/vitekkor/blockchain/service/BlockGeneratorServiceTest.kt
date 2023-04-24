@@ -6,7 +6,6 @@ import com.vitekkor.blockchain.model.HttpOutgoingMessage
 import com.vitekkor.blockchain.util.generateData
 import io.mockk.every
 import io.mockk.mockkStatic
-import io.mockk.unmockkAll
 import org.awaitility.Awaitility.await
 import org.awaitility.Durations
 import org.junit.jupiter.api.BeforeEach
@@ -33,7 +32,7 @@ internal class BlockGeneratorServiceTest {
     }
 
     @Test
-    fun blocksGenerationTest()  {
+    fun blocksGenerationTest() {
         mockkStatic(::generateData)
         every { generateData() } returns "Не до конца раскрыта тема природы в данном блокчейне..."
 
@@ -47,11 +46,9 @@ internal class BlockGeneratorServiceTest {
     }
 
     @Test
-    fun oneBlockGenerationTest()  {
-        unmockkAll()
+    fun oneBlockGenerationTest() {
         mockkStatic(::generateData)
         every { generateData() } returns "Не до конца раскрыта тема природы в данном блокчейне..."
-        ReflectionTestUtils.setField(blockGeneratorService, "nodeClients", emptyList<NodeClient>())
 
         blockGeneratorService.start()
         await().atMost(Durations.ONE_MINUTE).untilAsserted {
