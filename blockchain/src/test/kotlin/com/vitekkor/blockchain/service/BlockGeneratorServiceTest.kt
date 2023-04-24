@@ -1,5 +1,6 @@
 package com.vitekkor.blockchain.service
 
+import com.ninjasquad.springmockk.MockkBean
 import com.vitekkor.blockchain.model.Block
 import com.vitekkor.blockchain.model.HttpOutgoingMessage
 import com.vitekkor.blockchain.util.generateData
@@ -21,13 +22,17 @@ internal class BlockGeneratorServiceTest {
     @Autowired
     private lateinit var blockGeneratorService: BlockGeneratorService
 
+    @MockkBean
+    private lateinit var nodeClient: NodeClient
+
     @BeforeEach
     fun cleanUp() {
         ReflectionTestUtils.setField(blockGeneratorService, "blocks", mutableListOf<Block>())
+        every { nodeClient.sendNewBlock(any()) } returns true
     }
 
     @Test
-    fun blocksGenerationTest()  {
+    fun blocksGenerationTest() {
         mockkStatic(::generateData)
         every { generateData() } returns "Не до конца раскрыта тема природы в данном блокчейне..."
 
@@ -41,7 +46,7 @@ internal class BlockGeneratorServiceTest {
     }
 
     @Test
-    fun oneBlockGenerationTest()  {
+    fun oneBlockGenerationTest() {
         mockkStatic(::generateData)
         every { generateData() } returns "Не до конца раскрыта тема природы в данном блокчейне..."
 

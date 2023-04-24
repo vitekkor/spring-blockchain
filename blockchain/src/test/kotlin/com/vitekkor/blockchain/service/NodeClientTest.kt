@@ -8,11 +8,14 @@ import com.vitekkor.blockchain.stub.NodeStubDelegate
 import com.vitekkor.blockchain.util.generateData
 import io.mockk.every
 import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import org.awaitility.Awaitility
 import org.awaitility.Durations
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,6 +23,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.client.getForEntity
 import org.springframework.boot.test.web.client.postForEntity
+import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.util.ReflectionTestUtils
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -29,6 +33,7 @@ import kotlin.test.assertTrue
     webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
     properties = ["blockchain.nodes=http://localhost:8080/stub"]
 )
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 internal class NodeClientTest {
 
     @Autowired
@@ -53,6 +58,11 @@ internal class NodeClientTest {
         nodeStubDelegate.getBlockChainPreHook = {}
         nodeStubDelegate.lastBlockLambda = { it.last() }
         nodeStubDelegate.blockValidationLambda = { HttpOutgoingMessage.BlockAcceptedMessage(it) }
+    }
+
+    @AfterEach
+    fun stopNode() {
+        assertTrue(testRestTemplate.getForEntity<String>("/stop").statusCode.is2xxSuccessful)
     }
 
     @Test
@@ -91,6 +101,8 @@ internal class NodeClientTest {
                 assertTrue(it.statusCode.is2xxSuccessful)
                 assertNotNull(it.body)
                 assertTrue(it.body?.blocks?.size == 11)
+                assertTrue(testRestTemplate.getForEntity<String>("/stop").statusCode.is2xxSuccessful)
+                assertTrue(testRestTemplate.getForEntity<String>("/start").statusCode.is2xxSuccessful)
             }
         }
     }
@@ -176,6 +188,7 @@ internal class NodeClientTest {
     @Test
     fun getBlockChainExceptionTest() {
         mockkStatic(::generateData)
+        every { generateData() } returnsMany blocks.map { it.data }
         var i = 0
 
         nodeStubDelegate.blocks = blocks.dropLast(1)
@@ -191,8 +204,7 @@ internal class NodeClientTest {
             if (i++ > 0) {
                 nodeStubDelegate.getBlockChainPreHook = {}
             } else {
-                ReflectionTestUtils.setField(blockGeneratorService, "lastNonce", 114200)
-                Thread.sleep(1000)
+                ReflectionTestUtils.setField(blockGeneratorService, "lastNonce", 25300)
             }
             it.last()
         }
@@ -202,7 +214,7 @@ internal class NodeClientTest {
 
         assertTrue(testRestTemplate.getForEntity<String>("/start").statusCode.is2xxSuccessful)
 
-        ReflectionTestUtils.setField(blockGeneratorService, "lastNonce", 113200)
+        ReflectionTestUtils.setField(blockGeneratorService, "lastNonce", 25300)
 
         Awaitility.await().atMost(Durations.ONE_MINUTE.multipliedBy(2)).untilAsserted {
             testRestTemplate.getForEntity<HttpOutgoingMessage.BlockChainMessage>("/blockChain").let {
@@ -210,6 +222,70 @@ internal class NodeClientTest {
                 assertNotNull(it.body)
                 assertTrue(it.body?.blocks?.size == 11)
             }
+        }
+    }
+
+    @Test
+    fun sendNewNodeExceptionTest() {
+        mockkStatic(::generateData)
+        every { generateData() } returnsMany blocks.filter { it.index == 1L || it.index == 11L }.map { it.data }
+
+        nodeStubDelegate.blocks = blocks.dropLast(1)
+        nodeStubDelegate.blockValidationLambda = {
+            throw NoBlocksInNodeException()
+        }
+
+        nodeStubDelegate.getBlockChainPreHook = {
+            ReflectionTestUtils.setField(blockGeneratorService, "lastNonce", (blocks.last().nonce - 1000L))
+        }
+
+        nodeStubDelegate.lastBlockLambda = {
+            nodeStubDelegate.blockValidationLambda = { block ->
+                HttpOutgoingMessage.BlockAcceptedMessage(block)
+            }
+            it.last()
+        }
+
+        assertTrue(testRestTemplate.getForEntity<String>("/start").statusCode.is2xxSuccessful)
+
+        ReflectionTestUtils.setField(blockGeneratorService, "lastNonce", 25300)
+
+        Awaitility.await().atMost(Durations.ONE_MINUTE.multipliedBy(2)).untilAsserted {
+            testRestTemplate.getForEntity<HttpOutgoingMessage.BlockChainMessage>("/blockChain").let {
+                assertTrue(it.statusCode.is2xxSuccessful)
+                assertNotNull(it.body)
+                assertTrue(it.body?.blocks?.size == 11)
+            }
+        }
+    }
+
+    @Test
+    fun generateGenesisTest() {
+        mockkStatic(::generateData)
+        every { generateData() } returns "Не до конца раскрыта тема природы в данном блокчейне..."
+
+        nodeStubDelegate.blockValidationLambda = {
+            assertEquals(1L, it.index)
+            assertEquals("", it.previousHash)
+            HttpOutgoingMessage.BlockAcceptedMessage(it)
+        }
+
+        ReflectionTestUtils.setField(blockGeneratorService, "lastNonce", 130000L)
+
+        assertTrue(testRestTemplate.getForEntity<String>("/generateGenesys").statusCode.is2xxSuccessful)
+
+        testRestTemplate.getForEntity<HttpOutgoingMessage.BlockChainMessage>("/blockChain").let {
+            assertTrue(it.statusCode.is2xxSuccessful)
+            assertNotNull(it.body)
+            assertTrue(it.body?.blocks?.size == 1)
+        }
+    }
+
+    companion object {
+        @JvmStatic
+        @AfterAll
+        fun unmock() {
+            unmockkAll()
         }
     }
 

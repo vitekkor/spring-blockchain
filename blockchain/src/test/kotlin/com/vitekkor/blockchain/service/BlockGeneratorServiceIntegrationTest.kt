@@ -7,6 +7,7 @@ import com.vitekkor.blockchain.model.HttpOutgoingMessage
 import com.vitekkor.blockchain.util.generateData
 import io.mockk.every
 import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -14,6 +15,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import org.awaitility.Awaitility
 import org.awaitility.Durations
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -246,5 +248,13 @@ internal class BlockGeneratorServiceIntegrationTest {
                 val expectedResponse = HttpOutgoingMessage.LastBlockMessage(genesisBlock.block)
                 assertEquals(expectedResponse, actualResponse)
             }
+    }
+
+    companion object {
+        @JvmStatic
+        @AfterAll
+        fun unmock() {
+            unmockkAll()
+        }
     }
 }

@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.yield
 import mu.KotlinLogging.logger
 import org.springframework.stereotype.Service
 import java.util.Collections
@@ -53,6 +54,7 @@ class BlockGeneratorService(
         val data = generateData()
         val previousHash = getPreviousHash()
         do {
+            yield()
             val newBlock = Block(
                 index = lastIndex + 1,
                 previousHash = previousHash,
@@ -82,7 +84,7 @@ class BlockGeneratorService(
             } catch (e: IllegalArgumentException) {
                 log.trace { "Invalid block $newBlock. Regenerate..." }
             }
-        } while (job.isActive)
+        } while (true)
     }
 
     private fun getPreviousHash(): String {
