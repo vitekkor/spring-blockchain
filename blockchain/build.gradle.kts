@@ -35,6 +35,7 @@ springBoot {
 
 
 tasks.test {
+    maxHeapSize = "2048m"
     useJUnitPlatform()
     finalizedBy(tasks.jacocoTestReport)
 }
