@@ -8,11 +8,13 @@ import com.vitekkor.blockchain.stub.NodeStubDelegate
 import com.vitekkor.blockchain.util.generateData
 import io.mockk.every
 import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import org.awaitility.Awaitility
 import org.awaitility.Durations
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -271,6 +273,14 @@ internal class NodeClientTest {
             assertTrue(it.statusCode.is2xxSuccessful)
             assertNotNull(it.body)
             assertTrue(it.body?.blocks?.size == 1)
+        }
+    }
+
+    companion object {
+        @JvmStatic
+        @AfterAll
+        fun unmock() {
+            unmockkAll()
         }
     }
 
