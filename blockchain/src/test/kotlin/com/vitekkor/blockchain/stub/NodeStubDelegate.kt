@@ -6,12 +6,16 @@ import org.springframework.stereotype.Component
 
 @Component
 class NodeStubDelegate {
+    @Volatile
     var blocks = listOf<Block>()
 
+    @Volatile
     lateinit var blockValidationLambda: (Block) -> HttpOutgoingMessage
 
+    @Volatile
     lateinit var lastBlockLambda: (List<Block>) -> Block
 
+    @Volatile
     var getBlockChainPreHook = {}
 
     fun getLastBlock(): Block {
