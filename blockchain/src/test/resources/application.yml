@@ -1,3 +1,8 @@
 blockchain:
   generationStrategyName: INCREMENT
   nodes: []
+spring:
+  test:
+    context:
+      cache:
+        maxSize: 1
